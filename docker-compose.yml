@@ -1,0 +1,73 @@
+services:
+  nginx:
+    build:
+      context: .
+    image: nginx:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/certbot/conf:/etc/letsencrypt
+      - ./nginx/certbot/www:/var/www/certbot
+    depends_on:
+      - n8n
+      - api
+
+  n8n:
+    image: n8nio/n8n
+    restart: unless-stopped
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=motdepassefort
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=db
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=n8n
+      - DB_POSTGRESDB_PASSWORD=n8n
+      - NODE_FUNCTION_ALLOW_EXTERNAL=axios,qs
+      - N8N_HOST=${DOMAIN}
+      - WEBHOOK_URL=https://${DOMAIN}/
+      - N8N_PROTOCOL=https
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=n8n
+      - POSTGRES_USER=n8n
+      - POSTGRES_PASSWORD=n8n
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: "."
+      dockerfile: "DockerFile"
+    container_name: api
+    env_file: .env
+    ports:
+      - 8000:8000
+    volumes:
+      - ./downloads:/downloads
+
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    environment:
+      - DOMAIN=${DOMAIN}
+    volumes:
+      - ./nginx/certbot/www/:/var/www/certbot/:rw
+      - ./nginx/certbot/conf/:/etc/letsencrypt/:rw
+
+volumes:
+  n8n_data:
+  db_data:
