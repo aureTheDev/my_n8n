@@ -8,15 +8,16 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx/certbot/conf:/etc/letsencrypt
-      - ./nginx/certbot/www:/var/www/certbot
+      # On ajoute :ro (read-only) car Nginx n'a besoin que de lire ces fichiers
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certbot/conf:/etc/letsencrypt:ro
+      - ./nginx/certbot/www:/var/www/certbot:ro
     depends_on:
       - n8n
       - api
 
   n8n:
-    image: n8nio/n8n
+    image: docker.n8n.io/n8nio/n8n
     restart: unless-stopped
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
@@ -53,17 +54,12 @@ services:
       dockerfile: "DockerFile"
     container_name: api
     env_file: .env
-    ports:
-      - 8000:8000
     volumes:
       - ./downloads:/downloads
-
 
   certbot:
     image: certbot/certbot
     container_name: certbot
-    environment:
-      - DOMAIN=${DOMAIN}
     volumes:
       - ./nginx/certbot/www/:/var/www/certbot/:rw
       - ./nginx/certbot/conf/:/etc/letsencrypt/:rw
