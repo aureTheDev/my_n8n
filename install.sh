@@ -62,6 +62,13 @@ fi
 export DOMAIN
 handle_result $? "Exporting DOMAIN variable"
 
+if [ ! -d "./nginx" ]; then
+    mkdir -p ./nginx
+    echo "Dossier nginx créé."
+else
+    echo "Dossier nginx déjà existant."
+fi
+
 envsubst '$DOMAIN' < ./nginx-template.conf > ./nginx/nginx.conf
 handle_result $? "Substituting variables in nginx.conf"
 
