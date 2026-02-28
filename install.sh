@@ -90,8 +90,7 @@ fi
 
 domains=(
     "$DOMAIN"
-    "www.$DOMAIN"
-    "api.$DOMAIN")
+    "www.$DOMAIN")
 rsa_key_size=4096
 data_path="./nginx/certbot"
 email="${SSL_EMAIL:-terangui879@tersi.com}" # Adding a valid address is strongly recommended
